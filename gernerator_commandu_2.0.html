@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generátor příkazů</title>
+    <style type="text/css">
+        body {background-color: #111; color: #fff; margin: 2rem 4rem; font-family: Calibri, sans-serif; font-size: 1.2rem}
+        * {}
+    </style>
+</head>
+
+<body onload="toggleFields()">
+
+<form id="commandForm">
+    <legend>Mód:</legend>
+    <label><input type="radio" name="mode" value="0" onchange="toggleFields()" checked>0 = na kola</label>
+    <label><input type="radio" name="mode" value="1" onchange="toggleFields()">1 = na čas</label>
+    <label><input type="radio" name="mode" value="5" onchange="toggleFields()">5 = poháry</label><br><br>
+
+    <legend>Zahřívačka:</legend>
+    <label><input type="radio" name="warmup" value="1" checked> Ano</label>
+    <label><input type="radio" name="warmup" value="0"> Ne</label><br><br>
+
+    <legend>Respawn:</legend>
+    <label><input type="radio" name="respawn" value="1" checked>Ano</label>
+    <label><input type="radio" name="respawn" value="0">Ne</label><br><br>
+
+    <label for="callvote-ratio">Kvórum hlasování:</label>
+    <input type="number" step="0.01" min="0" max="1" id="callvote-ratio" value="0.5"><br><br>
+
+    <label for="chat-time">Pauza mezi tratěmi:</label>
+    <input type="number" id="chat-time" value="10000" step="1000"><br><br>
+
+    <div id="rounds">
+        <label for="rounds-limit" id="rounds-limit-label">Bodový limit pro ježdění "na kola":</label>
+        <input type="number" id="rounds-limit" value="34"><br><br>
+    </div>
+
+    <div id="timeattack">
+        <label for="timeattack-limit" id="timeattack-limit-label">Časový limit pro ježdění "na čas":</label>
+        <input type="number" id="timeattack-limit" value="340000" step="1000"><br><br>
+    </div>
+
+    <div id="cup">
+        <label for="cup-limit" id="cup-limit-label">Bodový limit pro ježdění "na poháry":</label>
+        <input type="number" id="cup-limit" value="30"><br><br>
+
+        <label for="cup-rounds-per-challenge" id="cup-rounds-per-challenge-label">Počet ježdení jedné trati pro ježdění "na poháry":</label>
+        <input type="number" id="cup-rounds-per-challenge" value="4"><br><br>
+    </div>
+
+    <label for="author-time-min">Minimální autorský čas tratí:</label>
+    <input type="number" id="author-time-min" step="1000"><br><br>
+
+    <label for="author-time-max">Maximální autorský čas tratí:</label>
+    <input type="number" id="author-time-max" step="1000"><br><br>
+
+    <label for="author-tracks-max">Maximální počet tratí jednoho autora:</label>
+    <input type="number" id="author-tracks-max"><br><br>
+
+    <legend>Vybrat autory:</legend>
+    <label><input type="radio" name="authors" value="exclude" onchange="toggleAuthors()">vyloučit</label>
+    <label><input type="radio" name="authors" value="include" onchange="toggleAuthors()">jen vybraní</label>
+    <br><br>
+    <div id="authors" style="display: none;">
+        <label><input type="checkbox" name="author" value="ciba"> ciba</label>
+        <label><input type="checkbox" name="author" value="coco"> coco</label>
+        <label><input type="checkbox" name="author" value="dave"> dave</label>
+        <label><input type="checkbox" name="author" value="drb"> drb</label>
+        <label><input type="checkbox" name="author" value="fifa"> fifa</label>
+        <label><input type="checkbox" name="author" value="hellscream"> hellscream</label>
+        <label><input type="checkbox" name="author" value="hery"> hery</label>
+        <label><input type="checkbox" name="author" value="javor"> javor</label>
+        <label><input type="checkbox" name="author" value="jitka"> jitka</label>
+        <label><input type="checkbox" name="author" value="koza"> koza</label>
+        <label><input type="checkbox" name="author" value="kuzjatin"> kuzjatin</label>
+        <label><input type="checkbox" name="author" value="lena"> lena</label>
+        <label><input type="checkbox" name="author" value="melmen"> melmen</label>
+        <label><input type="checkbox" name="author" value="sanik"> sanik</label>
+        <label><input type="checkbox" name="author" value="schpaik"> schpaik</label>
+        <label><input type="checkbox" name="author" value="simi"> simi</label>
+        <label><input type="checkbox" name="author" value="skunk"> skunk</label>
+        <label><input type="checkbox" name="author" value="spizek"> spizek</label>
+        <label><input type="checkbox" name="author" value="venca"> venca</label>
+        <label><input type="checkbox" name="author" value="zigi"> zigi</label>
+    </div>
+
+        <br><br>
+    <button type="button" onclick="generateCommand()">Generuj příkaz</button>
+    <button type="button" onclick="copyCommand()">Kopírovat</button>
+</form>
+
+<h2>Výsledný příkaz:</h2>
+<textarea id="outputCommand" rows="7" cols="100"></textarea>
+
+<script>
+function generateCommand() {
+    let mode = document.querySelector('input[name="mode"]:checked').value;
+    let command = "start " + mode;
+
+    command = addOptionToCommand("warmup", command,"--warmup");
+    command = addOptionToCommand("respawn", command, "--respawn");
+    command = addOptionToCommand("callvote-ratio", command);
+    command = addOptionToCommand("chat-time", command);
+    command = addOptionToCommand("rounds-limit", command, "--rounds-limit");
+    command = addOptionToCommand("timeattack-limit", command, "--timeattack-limit");
+    command = addOptionToCommand("cup-limit", command, "--cup-limit");
+    command = addOptionToCommand("cup-rounds-per-challenge", command, "--cup-rounds-per-challenge");
+    command = addOptionToCommand("author-time-min", command);
+    command = addOptionToCommand("author-time-max", command);
+    command = addOptionToCommand("author-tracks-max", command);
+    command = addOptionToCommand("authors", command,"author"); 
+
+    document.getElementById("outputCommand").value = command;
+}
+
+function addOptionToCommand(optionId, command, optionFlag) {
+    let value;
+    let defaultValue;
+    if (optionFlag === "--respawn" || optionFlag === "--warmup") {
+        value = document.querySelector('input[name="' + optionId + '"]:checked').value;
+        if(document.querySelector('input[name="' + optionId + '"]:checked').defaultChecked) {
+             defaultValue = value; 
+        } else {
+             defaultValue = null; 
+        }
+    } else if (optionId === "authors") {
+        let excludedAuthors = document.querySelectorAll('input[name="'+optionFlag+'"]:checked');
+        if (excludedAuthors.length > 0) {
+            optionFlag = " --" + optionFlag +'-'+ document.querySelector('input[name="'+ optionId +'"]:checked').value;
+            value = Array.from(excludedAuthors).map(input => input.value).join(optionFlag + ' ');
+        } else {
+            value = null;
+        }
+    } else {
+        value = document.getElementById(optionId).value;
+        defaultValue = document.getElementById(optionId).defaultValue;
+    }
+
+    if (value && value !== defaultValue) {
+        if (optionFlag) {
+            command += " " + optionFlag + " " + value;
+        } else {
+            command += " --" + optionId + " " + value;
+        }
+    }
+    return command;
+}
+
+function toggleFields() {
+    let mode = document.querySelector('input[name="mode"]:checked').value;
+    if (mode == "0") {
+        document.getElementById("rounds").style.display = "block";
+        document.getElementById("timeattack").style.display = "none";
+        document.getElementById("cup").style.display = "none";
+    } else if (mode == "1") {
+        document.getElementById("rounds").style.display = "none";
+        document.getElementById("timeattack").style.display = "block";
+        document.getElementById("cup").style.display = "none";
+    } else if (mode == "5") {
+        document.getElementById("rounds").style.display = "none";
+        document.getElementById("timeattack").style.display = "none";
+        document.getElementById("cup").style.display = "block";
+    }
+}
+
+function toggleAuthors() {
+        document.getElementById("authors").style.display = "block";
+}
+
+function copyCommand() {
+    var copyText = document.getElementById("outputCommand");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); /* For mobile devices */
+    document.execCommand("copy");
+    //alert("Příkaz byl zkopírován: " + copyText.value);
+}
+</script>
+
+</body>
+
+</html>
